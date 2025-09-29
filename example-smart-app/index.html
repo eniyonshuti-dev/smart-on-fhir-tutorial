@@ -14,13 +14,20 @@
 <script>
 (async () => {
   try {
-    const client = await FHIR.oauth2.ready();
+    // More robust storage handling on GitHub Pages
+    FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-    // Show what scopes we actually got (useful for debugging)
+    const client = await FHIR.oauth2.ready().catch(e => {
+      const msg = e?.message || JSON.stringify(e);
+      document.getElementById("status").textContent = "Auth error: " + msg;
+      throw e;
+    });
+
+    // Show what scopes we actually got
     const granted = client.state?.tokenResponse?.scope || "(none)";
     document.getElementById("status").textContent = "Granted scopes: " + granted;
 
-    // Get patient ID from launch context/token (no Patient read)
+    // Get patient id from context (no Patient read call)
     const pid =
       (client.getPatientId && client.getPatientId()) ||
       client.patient?.id ||
@@ -35,7 +42,7 @@
       return;
     }
 
-    // Latest HbA1c using only a search (no Patient read)
+    // Latest HbA1c via Observation search only
     const bundle = await client.request(
       `Observation?patient=${encodeURIComponent(pid)}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
     );
@@ -47,4 +54,9 @@
         : "<p>No HbA1c found for this patient.</p>";
 
   } catch (e) {
-    document.getElementById("
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
