@@ -7,31 +7,39 @@
 </head>
 <body>
 <script>
-  // Make fhirclient store launch state reliably on static hosts
   FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f"; // your Provider app client_id
-  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // <-- trailing slash
+  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f";   // your Provider app client_id
+  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/";
 
   const q = new URLSearchParams(location.search);
   const iss    = q.get("iss");
   const launch = q.get("launch");
 
+  const scopeString = [
+    "launch","launch/patient",
+    "openid","profile","fhirUser",
+    // ask for data scopes
+    "patient/Patient.read",
+    "patient/Observation.read",
+    "patient/MedicationRequest.read",
+    "patient/Condition.read",
+    "patient/Encounter.read",
+    "patient/AllergyIntolerance.read",
+    // cover provider flows that use user/*
+    "user/Patient.read"
+  ].join(" ");
+
+  // show what we are requesting (so we know the page really has this)
+  document.body.innerHTML = `<pre>Requesting scopes:\n${scopeString}</pre>`;
+
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
     redirectUri: REDIRECT,
-    iss,
-    launch,
-    completeInTarget: true,                // ← avoids multi-window state issues
-    scope: [
-  "launch","launch/patient",
-  "openid","profile","fhirUser",
-  "patient/*.read",         // or explicit patient/Patient.read etc.
-  "user/Patient.read"
-].join(" ")
+    iss, launch,
+    completeInTarget: true,
+    scope: scopeString
   });
 </script>
 </body>
 </html>
-
-
