@@ -8,45 +8,43 @@
 <body>
   <h1>Diabetes Care Companion</h1>
   <div id="status">Authorizing…</div>
-  <div id="patient"></div>
+  <div id="ctx"></div>
   <div id="labs"></div>
 
 <script>
 (async () => {
   try {
     const client = await FHIR.oauth2.ready();
-document.getElementById("status").textContent =
-  "Granted scopes: " + (client.state?.tokenResponse?.scope || "(none)");
 
+    // Show what scopes we actually got (useful for debugging)
+    const granted = client.state?.tokenResponse?.scope || "(none)";
+    document.getElementById("status").textContent = "Granted scopes: " + granted;
 
-    // Patient banner
-    const p = await client.patient.read();
-      const nm = (p.name && p.name[0]) || {};
-    const name =
-      nm.text ||
-      [nm.given && nm.given[0], nm.family].filter(Boolean).join(" ") ||
-      "Unnamed";
-    document.getElementById("patient").innerHTML =
-      `<p><strong>Patient:</strong> ${name} • <strong>DOB:</strong> ${p.birthDate || "?"}</p>`;
-    document.getElementById("status").style.display = "none";
+    // Get patient ID from launch context/token (no Patient read)
+    const pid =
+      (client.getPatientId && client.getPatientId()) ||
+      client.patient?.id ||
+      client.state?.tokenResponse?.patient;
 
-    // Latest HbA1c (LOINC 4548-4)
-    const pid = client.getPatientId();
+    document.getElementById("ctx").innerHTML =
+      `<p><strong>Patient ID (context):</strong> ${pid || "(missing)"} </p>`;
+
+    if (!pid) {
+      document.getElementById("labs").innerHTML =
+        "<p>Could not determine patient id from launch context.</p>";
+      return;
+    }
+
+    // Latest HbA1c using only a search (no Patient read)
     const bundle = await client.request(
-      `Observation?patient=${pid}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
+      `Observation?patient=${encodeURIComponent(pid)}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
     );
     const a1c = bundle.entry?.[0]?.resource;
 
     document.getElementById("labs").innerHTML =
       a1c
         ? `<p><strong>Latest HbA1c:</strong> ${a1c.valueQuantity?.value ?? "—"} ${a1c.valueQuantity?.unit ?? ""} (${a1c.effectiveDateTime || a1c.issued || ""})</p>`
-        : "<p>No HbA1c found.</p>";
+        : "<p>No HbA1c found for this patient.</p>";
 
   } catch (e) {
-    document.getElementById("status").textContent = "Launch error: " + (e?.message || e);
-    console.error(e);
-  }
-})();
-</script>
-</body>
-</html>
+    document.getElementById("
