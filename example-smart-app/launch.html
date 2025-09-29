@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>SMART Launch</title>
-  <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
-</head>
-<body>
+<script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 <script>
-  // Replace this with your Code Console client_id
-  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f";
+  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f"; // your Provider app client_id
+  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // note trailing "/"
 
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
-    redirectUri: "./",           // sends user back to index.html
+    redirectUri: REDIRECT,
     scope: [
       "launch/patient",
       "openid", "profile", "fhirUser",
@@ -22,9 +15,6 @@
       "patient/Observation.read",
       "patient/Condition.read",
       "patient/Encounter.read"
-      // add more only if you enabled them in the console
     ].join(" ")
   });
 </script>
-</body>
-</html>
