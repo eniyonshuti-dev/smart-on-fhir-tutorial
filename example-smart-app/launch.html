@@ -13,15 +13,16 @@
     scope: [
       "launch","launch/patient",
       "openid","profile","fhirUser",
-      // patient context (EHR launch)
+      // patient-context scopes
       "patient/Patient.read",
       "patient/Observation.read",
       "patient/MedicationRequest.read",
       "patient/Condition.read",
       "patient/Encounter.read",
       "patient/AllergyIntolerance.read",
-      // user context (some Cerner flows issue user/* scopes for provider apps)
+      // user-context scope (needed in some provider flows)
       "user/Patient.read"
     ].join(" ")
   });
 </script>
+
