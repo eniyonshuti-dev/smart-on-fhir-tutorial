@@ -15,8 +15,9 @@
 (async () => {
   try {
     const client = await FHIR.oauth2.ready();
-    document.getElementById("status").textContent =
+document.getElementById("status").textContent =
   "Granted scopes: " + (client.state?.tokenResponse?.scope || "(none)");
+
 
     // Patient banner
     const p = await client.patient.read();
