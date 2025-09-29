@@ -1,15 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>SMART on FHIR App</title>
+  <meta charset="utf-8" />
+  <title>Diabetes Care Companion</title>
+  <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 </head>
 <body>
   <h1>Diabetes Care Companion</h1>
-  <p>This is your SMART on FHIR demo app.</p>
-  <div id="patient-data"></div>
+  <div id="status">Authorizing…</div>
+  <div id="patient"></div>
+  <div id="labs"></div>
 
-  <script>
-    document.getElementById('patient-data').innerHTML = "App launched successfully!";
-  </script>
+<script>
+(async () => {
+  try {
+    const client = await FHIR.oauth2.ready();
+
+    // Basic patient banner
+    const p = await client.patient.read();
+    const name = (p.name && (p.name[0].text || [p.name[0].given?.[0], p.name[0].family].filter(Boolean).join(" "))) || "Unnamed";
+    document.getElementById("patient").innerHTML =
+      `<p><strong>Patient:</strong> ${name} • <strong>DOB:</strong> ${p.birthDate || "?"}</p>`;
+    document.getElementById("status").style.display = "none";
+
+    // Latest HbA1c (LOINC 4548-4) as a demo
+    const pid = client.getPatientId();
+    const bundle = await client.request(
+      `Observation?patient=${pid}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
+    );
+    const a1c = bundle.entry?.[0]?.resource;
+    document.getElementById("labs").innerHTML =
+      a1c
+        ? `<p><strong>Latest HbA1c:</strong> ${a1c.valueQuantity?.value ?? "—"} ${a1c.valueQuantity?.unit ?? ""} (${a1c.effectiveDateTime || ""})</p>`
+        : "<p>No HbA1c found.</p>";
+
+  } catch (e) {
+    document.getElementById("status").textContent = "Launch error: " + (e?.message || e);
+    console.error(e);
+  }
+})();
+</script>
 </body>
 </html>
