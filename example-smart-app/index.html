@@ -18,6 +18,8 @@
 
     // Patient banner
     const p = await client.patient.read();
+    document.getElementById("status").textContent =
+  "Granted scopes: " + (client.state?.tokenResponse?.scope || "(none)");
     const nm = (p.name && p.name[0]) || {};
     const name =
       nm.text ||
