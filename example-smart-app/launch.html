@@ -1,48 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>SMART Launch</title>
-  <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
-</head>
-<body>
+<script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 <script>
-  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f"; // YOUR Provider app client_id
+  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f"; // your Provider app client_id
   const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // trailing slash
 
-  // Read iss & launch that the EHR sends to your launch URL
+  // Read iss & launch from the EHR launch URL
   const params = new URLSearchParams(window.location.search);
   const iss    = params.get("iss");
   const launch = params.get("launch");
 
-  // Simple on-screen debug (remove later)
-  document.body.insertAdjacentHTML(
-    "beforeend",
-    `<pre>iss=${iss || "(missing)"}  launch=${launch || "(missing)"}  redirect=${REDIRECT}</pre>`
-  );
-
-  // If you didn’t start from Test Sandbox you won’t have iss/launch
-  if (!iss) {
-    document.body.insertAdjacentHTML("beforeend","<p>Missing <code>iss</code> – start from Test Sandbox.</p>");
-  } else {
-    FHIR.oauth2.authorize({
-      clientId: CLIENT_ID,
-      redirectUri: REDIRECT,
-      scope: [
-        "launch/patient",
-        "openid","profile","fhirUser",
-        "patient/Patient.read",
-        "patient/AllergyIntolerance.read",
-        "patient/MedicationRequest.read",
-        "patient/Observation.read",
-        "patient/Condition.read",
-        "patient/Encounter.read"
-      ].join(" "),
-      iss,          // pass explicitly
-      launch        // pass explicitly
-    });
-  }
+  FHIR.oauth2.authorize({
+    clientId: CLIENT_ID,
+    redirectUri: REDIRECT,
+    iss,
+    launch,
+    scope: [
+      "launch",                // <-- add this
+      "launch/patient",
+      "openid","profile","fhirUser",
+      "patient/Patient.read",
+      "patient/AllergyIntolerance.read",
+      "patient/MedicationRequest.read",
+      "patient/Observation.read",
+      "patient/Condition.read",
+      "patient/Encounter.read"
+    ].join(" ")
+  });
 </script>
-</body>
-</html>
-
