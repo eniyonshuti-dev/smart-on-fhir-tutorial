@@ -24,11 +24,11 @@
     launch,
     completeInTarget: true,                // ← avoids multi-window state issues
     scope: [
-      "launch","launch/patient",
-      "openid","profile","fhirUser",
-      "patient/*.read",                    // keeps demo simple
-      "user/Patient.read"                  // covers some provider-token styles
-    ].join(" ")
+  "launch","launch/patient",
+  "openid","profile","fhirUser",
+  "patient/*.read",         // or explicit patient/Patient.read etc.
+  "user/Patient.read"
+].join(" ")
   });
 </script>
 </body>
