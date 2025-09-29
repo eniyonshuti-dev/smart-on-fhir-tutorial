@@ -1,14 +1,14 @@
 <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 <script>
   const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f"; // your Provider app client_id
-  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // note trailing "/"
+  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // NOTE trailing slash
 
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
     redirectUri: REDIRECT,
     scope: [
       "launch/patient",
-      "openid", "profile", "fhirUser",
+      "openid","profile","fhirUser",
       "patient/Patient.read",
       "patient/AllergyIntolerance.read",
       "patient/MedicationRequest.read",
