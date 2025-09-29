@@ -16,22 +16,27 @@
   try {
     const client = await FHIR.oauth2.ready();
 
-    // Basic patient banner
+    // Patient banner
     const p = await client.patient.read();
-    const name = (p.name && (p.name[0].text || [p.name[0].given?.[0], p.name[0].family].filter(Boolean).join(" "))) || "Unnamed";
+    const nm = (p.name && p.name[0]) || {};
+    const name =
+      nm.text ||
+      [nm.given && nm.given[0], nm.family].filter(Boolean).join(" ") ||
+      "Unnamed";
     document.getElementById("patient").innerHTML =
       `<p><strong>Patient:</strong> ${name} • <strong>DOB:</strong> ${p.birthDate || "?"}</p>`;
     document.getElementById("status").style.display = "none";
 
-    // Latest HbA1c (LOINC 4548-4) as a demo
+    // Latest HbA1c (LOINC 4548-4)
     const pid = client.getPatientId();
     const bundle = await client.request(
       `Observation?patient=${pid}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
     );
     const a1c = bundle.entry?.[0]?.resource;
+
     document.getElementById("labs").innerHTML =
       a1c
-        ? `<p><strong>Latest HbA1c:</strong> ${a1c.valueQuantity?.value ?? "—"} ${a1c.valueQuantity?.unit ?? ""} (${a1c.effectiveDateTime || ""})</p>`
+        ? `<p><strong>Latest HbA1c:</strong> ${a1c.valueQuantity?.value ?? "—"} ${a1c.valueQuantity?.unit ?? ""} (${a1c.effectiveDateTime || a1c.issued || ""})</p>`
         : "<p>No HbA1c found.</p>";
 
   } catch (e) {
