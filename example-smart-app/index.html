@@ -14,20 +14,23 @@
 <script>
 (async () => {
   try {
-    // More robust storage handling on GitHub Pages
+    // More robust storage handling on static hosts (GitHub Pages)
     FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
     const client = await FHIR.oauth2.ready().catch(e => {
-      const msg = e?.message || JSON.stringify(e);
-      document.getElementById("status").textContent = "Auth error: " + msg;
+      document.getElementById("status").textContent =
+        "Auth error: " + (e?.message || JSON.stringify(e));
       throw e;
     });
 
-    // Show what scopes we actually got
-    const granted = client.state?.tokenResponse?.scope || "(none)";
-    document.getElementById("status").textContent = "Granted scopes: " + granted;
+    // Show what was actually granted and which client was used
+    const granted   = client.state?.tokenResponse?.scope || "(none)";
+    const usedClient= client.state?.clientId || "(unknown)";
+    const baseUrl   = client.state?.serverUrl || client.state?.tokenResponse?.iss || "";
+    document.getElementById("status").textContent =
+      `Granted scopes: ${granted} | clientId: ${usedClient} | iss: ${baseUrl}`;
 
-    // Get patient id from context (no Patient read call)
+    // Patient id from context (no Patient/{id} read)
     const pid =
       (client.getPatientId && client.getPatientId()) ||
       client.patient?.id ||
@@ -42,8 +45,21 @@
       return;
     }
 
-    // Latest HbA1c via Observation search only
-    const bundle = await client.request(
+    // Helper: show friendly message on insufficient scope
+    async function safeRequest(url) {
+      try {
+        return await client.request(url);
+      } catch (e) {
+        const msg = e?.response?.text || e?.message || JSON.stringify(e);
+        document.getElementById("labs").innerHTML =
+          `<p><strong>Data request failed.</strong> ${msg}
+           <br/>This usually means the token lacks a data scope (e.g., <code>patient/*.read</code>).</p>`;
+        throw e;
+      }
+    }
+
+    // Latest HbA1c (LOINC 4548-4) using only a search
+    const bundle = await safeRequest(
       `Observation?patient=${encodeURIComponent(pid)}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
     );
     const a1c = bundle.entry?.[0]?.resource;
