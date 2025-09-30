@@ -3,30 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <title>SMART Launch (Patient App)</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 </head>
 <body>
 <script>
   FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-  // ==== USE THE PATIENT APP CLIENT_ID ====
-  const CLIENT_ID = "6a0f3954-d0f7-452d-aecf-f64f8fadb8a2";
-  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // trailing slash
+  const CLIENT_ID = "6a0f3954-d0f7-452d-aecf-f64f8fadb8a2"; // <- PATIENT app id
+  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/";
 
   const q = new URLSearchParams(location.search);
-  const iss    = q.get("iss");
+  const iss = q.get("iss");
   const launch = q.get("launch");
 
   const scope = [
     "launch","launch/patient",
     "openid","profile","fhirUser",
-    "patient/*.read"          // request data access for the patient
+    "patient/*.read"
   ].join(" ");
 
-  // Show what we’re requesting (helps detect caching / wrong file)
+  // On-screen debug so you can confirm what's deployed
   document.body.insertAdjacentHTML(
     "beforeend",
-    `<pre>Using client_id: ${CLIENT_ID}\nRequesting scopes:\n${scope}</pre>`
+    `<pre>client_id: ${CLIENT_ID}\nrequesting:\n${scope}</pre>`
   );
 
   FHIR.oauth2.authorize({
