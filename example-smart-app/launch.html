@@ -3,43 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <title>SMART Launch (Patient App)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 </head>
 <body>
 <script>
-  // Make fhirclient store state reliably on static hosts (like GitHub Pages)
   FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-  // ==== EDIT THIS ====
+  // ==== USE THE PATIENT APP CLIENT_ID ====
   const CLIENT_ID = "6a0f3954-d0f7-452d-aecf-f64f8fadb8a2";
-  // Your deployed redirect (must match what you registered; note the trailing slash)
-  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/";
+  const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/"; // trailing slash
 
-  // Read EHR launch params
   const q = new URLSearchParams(location.search);
   const iss    = q.get("iss");
   const launch = q.get("launch");
 
-  // Scopes for a Patient app. 'patient/*.read' gives read access to the patient's data.
-  // Keep both 'launch' and 'launch/patient' for compatibility with Oracle/ Cerner.
   const scope = [
-    "launch", "launch/patient",
-    "openid", "profile", "fhirUser",
-    "patient/*.read"
-    // "offline_access" // <- optional: ask for refresh tokens if your registration allows it
+    "launch","launch/patient",
+    "openid","profile","fhirUser",
+    "patient/*.read"          // request data access for the patient
   ].join(" ");
 
-  // Kick off SMART on FHIR authorize
+  // Show what we’re requesting (helps detect caching / wrong file)
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<pre>Using client_id: ${CLIENT_ID}\nRequesting scopes:\n${scope}</pre>`
+  );
+
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
     redirectUri: REDIRECT,
-    scope,
-    iss,
-    launch,
-    completeInTarget: true
+    iss, launch,
+    completeInTarget: true,
+    scope
   });
 </script>
 </body>
 </html>
-
