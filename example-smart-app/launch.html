@@ -1,8 +1,16 @@
-<script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SMART Launch (Provider)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
+</head>
+<body>
 <script>
   FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-  const CLIENT_ID = "6a0f3954-d0f7-452d-aecf-f64f8fadb8a2"; // your PATIENT app id
+  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f";
   const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/";
 
   const q = new URLSearchParams(location.search);
@@ -10,20 +18,24 @@
   const launch = q.get("launch");
 
   const scope = [
-    "launch", "launch/patient",
-    "openid", "profile", "fhirUser",
-    // explicit data scopes (avoid wildcard)
+    "launch","launch/patient",
+    "openid","profile","fhirUser",
+    // explicit provider data scopes (minimum necessary)
     "patient/Patient.read",
     "patient/Observation.read",
     "patient/MedicationRequest.read",
     "patient/Condition.read",
     "patient/Encounter.read",
-    "patient/AllergyIntolerance.read"
+    "patient/AllergyIntolerance.read",
+    // uncomment if your tenant requires it:
+    // "user/Patient.read"
   ].join(" ");
 
-  // small debug so you see what’s deployed
-  document.body.insertAdjacentHTML("beforeend",
-    `<pre>client_id: ${CLIENT_ID}\nrequesting:\n${scope}</pre>`);
+  // brief on-screen debug (helpful if you screenshot)
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `<pre>client_id: ${CLIENT_ID}\nrequesting:\n${scope}</pre>`
+  );
 
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
@@ -33,3 +45,5 @@
     scope
   });
 </script>
+</body>
+</html>
