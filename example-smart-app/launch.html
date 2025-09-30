@@ -2,44 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>SMART Launch</title>
+  <title>SMART Launch (Patient App)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/fhirclient@latest/build/fhir-client.js"></script>
 </head>
 <body>
 <script>
+  // Make fhirclient store state reliably on static hosts (like GitHub Pages)
   FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-  const CLIENT_ID = "ba92e811-144a-412c-ac69-2a0cdd1abc9f";   // your Provider app client_id
+  // ==== EDIT THIS ====
+  const CLIENT_ID = "6a0f3954-d0f7-452d-aecf-f64f8fadb8a2";
+  // Your deployed redirect (must match what you registered; note the trailing slash)
   const REDIRECT  = "https://eniyonshuti-dev.github.io/smart-on-fhir-tutorial/example-smart-app/";
 
+  // Read EHR launch params
   const q = new URLSearchParams(location.search);
   const iss    = q.get("iss");
   const launch = q.get("launch");
 
-  const scopeString = [
-    "launch","launch/patient",
-    "openid","profile","fhirUser",
-    // ask for data scopes
-    "patient/Patient.read",
-    "patient/Observation.read",
-    "patient/MedicationRequest.read",
-    "patient/Condition.read",
-    "patient/Encounter.read",
-    "patient/AllergyIntolerance.read",
-    // cover provider flows that use user/*
-    "user/Patient.read"
+  // Scopes for a Patient app. 'patient/*.read' gives read access to the patient's data.
+  // Keep both 'launch' and 'launch/patient' for compatibility with Oracle/ Cerner.
+  const scope = [
+    "launch", "launch/patient",
+    "openid", "profile", "fhirUser",
+    "patient/*.read"
+    // "offline_access" // <- optional: ask for refresh tokens if your registration allows it
   ].join(" ");
 
-  // show what we are requesting (so we know the page really has this)
-  document.body.innerHTML = `<pre>Requesting scopes:\n${scopeString}</pre>`;
-
+  // Kick off SMART on FHIR authorize
   FHIR.oauth2.authorize({
     clientId: CLIENT_ID,
     redirectUri: REDIRECT,
-    iss, launch,
-    completeInTarget: true,
-    scope: scopeString
+    scope,
+    iss,
+    launch,
+    completeInTarget: true
   });
 </script>
 </body>
 </html>
+
