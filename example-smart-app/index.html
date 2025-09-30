@@ -14,23 +14,16 @@
 <script>
 (async () => {
   try {
-    // More robust storage handling on static hosts (GitHub Pages)
     FHIR.oauth2.settings.fullSessionStorageSupport = true;
 
-    const client = await FHIR.oauth2.ready().catch(e => {
-      document.getElementById("status").textContent =
-        "Auth error: " + (e?.message || JSON.stringify(e));
-      throw e;
-    });
+    const client = await FHIR.oauth2.ready();
 
-    // Show what was actually granted and which client was used
-    const granted   = client.state?.tokenResponse?.scope || "(none)";
-    const usedClient= client.state?.clientId || "(unknown)";
-    const baseUrl   = client.state?.serverUrl || client.state?.tokenResponse?.iss || "";
+    const granted = client.state?.tokenResponse?.scope || "(none)";
+    const usedClient = client.state?.clientId || "(unknown)";
+    const iss = client.state?.serverUrl || client.state?.tokenResponse?.iss || "";
     document.getElementById("status").textContent =
-      `Granted scopes: ${granted} | clientId: ${usedClient} | iss: ${baseUrl}`;
+      `Granted scopes: ${granted} | clientId: ${usedClient} | iss: ${iss}`;
 
-    // Patient id from context (no Patient/{id} read)
     const pid =
       (client.getPatientId && client.getPatientId()) ||
       client.patient?.id ||
@@ -45,21 +38,16 @@
       return;
     }
 
-    // Helper: show friendly message on insufficient scope
-    async function safeRequest(url) {
-      try {
-        return await client.request(url);
-      } catch (e) {
-        const msg = e?.response?.text || e?.message || JSON.stringify(e);
-        document.getElementById("labs").innerHTML =
-          `<p><strong>Data request failed.</strong> ${msg}
-           <br/>This usually means the token lacks a data scope (e.g., <code>patient/*.read</code>).</p>`;
-        throw e;
-      }
+    // Only try the HbA1c call if the token actually has Observation.read
+    if (!granted.includes("patient/Observation.read")) {
+      document.getElementById("labs").innerHTML =
+        "<p><em>Data not shown:</em> This token doesn’t include Observation read scope. " +
+        "Provider apps in public sandboxes often get identity-only scopes unless approved.</p>";
+      return;
     }
 
-    // Latest HbA1c (LOINC 4548-4) using only a search
-    const bundle = await safeRequest(
+    // Latest HbA1c (LOINC 4548-4) using a search (no Patient/{id} read)
+    const bundle = await client.request(
       `Observation?patient=${encodeURIComponent(pid)}&code=http://loinc.org|4548-4&_sort=-date&_count=1`
     );
     const a1c = bundle.entry?.[0]?.resource;
@@ -68,8 +56,9 @@
       a1c
         ? `<p><strong>Latest HbA1c:</strong> ${a1c.valueQuantity?.value ?? "—"} ${a1c.valueQuantity?.unit ?? ""} (${a1c.effectiveDateTime || a1c.issued || ""})</p>`
         : "<p>No HbA1c found for this patient.</p>";
-
   } catch (e) {
+    document.getElementById("status").textContent =
+      "Auth/Data error: " + (e?.message || JSON.stringify(e));
     console.error(e);
   }
 })();
